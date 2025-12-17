@@ -1,8 +1,8 @@
 FROM php:8.3-fpm-alpine
 
-# System deps
 RUN apk add --no-cache \
     nginx \
+    bash \
     curl \
     zip \
     unzip \
@@ -11,10 +11,8 @@ RUN apk add --no-cache \
     libpng-dev \
     libjpeg-turbo-dev \
     freetype-dev \
-    postgresql-dev \
-    bash
+    postgresql-dev
 
-# PHP extensions
 RUN docker-php-ext-configure gd \
     --with-freetype \
     --with-jpeg \
@@ -22,24 +20,18 @@ RUN docker-php-ext-configure gd \
     pdo \
     pdo_pgsql \
     mbstring \
-    gd \
-    bcmath
+    bcmath \
+    gd
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
-
-# Copy app
 COPY . .
 
-# Install dependencies
 RUN composer install --no-dev --optimize-autoloader
 
-# Permissions
 RUN chown -R www-data:www-data storage bootstrap/cache
 
-# Nginx config
 COPY docker/nginx.conf /etc/nginx/http.d/default.conf
 
 EXPOSE 8000
